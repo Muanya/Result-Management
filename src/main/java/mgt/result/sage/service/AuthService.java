@@ -1,7 +1,10 @@
 package mgt.result.sage.service;
 
-import mgt.result.sage.dto.AuthResponse;
+import jakarta.servlet.http.Cookie;
+import lombok.extern.slf4j.Slf4j;
+import mgt.result.sage.dto.AuthToken;
 import mgt.result.sage.dto.RegisterRequest;
+import mgt.result.sage.entity.Magister;
 import mgt.result.sage.entity.Student;
 import mgt.result.sage.entity.User;
 import mgt.result.sage.repository.UserRepository;
@@ -9,6 +12,7 @@ import mgt.result.sage.utils.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class AuthService {
     private final UserRepository userRepo;
@@ -21,7 +25,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    public AuthResponse register(RegisterRequest req) {
+    public AuthToken register(RegisterRequest req) {
         if (userRepo.findByEmail(req.getEmail()).isPresent()) {
             throw new RuntimeException("Email Already exist");
         }
@@ -29,17 +33,34 @@ public class AuthService {
         String accessToken = jwtUtil.generateAccessToken(req.getEmail());
         String refreshToken = jwtUtil.generateRefreshToken(req.getEmail());
 
-        Student user = new Student();
+
+        String role = req.getRole().toLowerCase();
+
+        User user;
+
+        switch (role) {
+            case "teacher":
+                user = new Magister();
+                user.setRole(User.Role.TEACHER);
+                break;
+            case "student":
+                user = new Student();
+                user.setRole(User.Role.STUDENT);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid role: " + req.getRole());
+        }
+
         user.setEmail(req.getEmail());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
         user.setFirstName(req.getFirstName());
         user.setLastName(req.getLastName());
         user.setRefreshToken(refreshToken);
         userRepo.save(user);
-        return new AuthResponse(accessToken, refreshToken);
+        return new AuthToken(accessToken, refreshToken);
     }
 
-    public AuthResponse login(String email, String password) {
+    public AuthToken login(String email, String password) {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -49,10 +70,12 @@ public class AuthService {
         String accessToken = jwtUtil.generateAccessToken(email);
         String refreshToken = jwtUtil.generateRefreshToken(email);
 
-        return new AuthResponse(accessToken, refreshToken);
+        user.setRefreshToken(refreshToken);
+        userRepo.save(user);
+        return new AuthToken(accessToken, refreshToken);
     }
 
-    public AuthResponse refreshUserToken(String email, String refreshToken) {
+    public AuthToken refreshUserToken(String email, String refreshToken) {
         if (!jwtUtil.validateToken(refreshToken, email)) {
             throw new RuntimeException("Invalid Refresh Token");
         }
@@ -70,7 +93,7 @@ public class AuthService {
 
         userRepo.save(user);
 
-        return new AuthResponse(newAccessToken, newRefreshToken);
+        return new AuthToken(newAccessToken, newRefreshToken);
 
     }
 
@@ -83,5 +106,15 @@ public class AuthService {
 
     public String getEmailFromToken(String token) {
         return jwtUtil.extractEmail(token);
+    }
+
+    public Cookie getRefreshCookie(AuthToken tokens) {
+        Cookie refreshCookie = new Cookie("refreshToken", tokens.getRefreshToken());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true); // only over HTTPS in production
+        refreshCookie.setPath("v1/auth/refresh"); // cookie only sent to v1/auth/refresh
+        refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
+        refreshCookie.setAttribute("SameSite", "None");
+        return refreshCookie;
     }
 }

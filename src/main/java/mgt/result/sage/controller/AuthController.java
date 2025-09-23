@@ -1,10 +1,14 @@
 package mgt.result.sage.controller;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import mgt.result.sage.dto.AuthRequest;
 import mgt.result.sage.dto.AuthResponse;
+import mgt.result.sage.dto.AuthToken;
 import mgt.result.sage.dto.RegisterRequest;
 import mgt.result.sage.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -17,25 +21,45 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public AuthResponse register(@RequestBody RegisterRequest registerRequest) {
-        return authService.register(registerRequest);
+    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest registerRequest, HttpServletResponse response) {
+        AuthToken tokens = authService.register(registerRequest);
+        Cookie refreshCookie = authService.getRefreshCookie(tokens);
+        response.addCookie(refreshCookie);
+
+        return ResponseEntity.ok(new AuthResponse(tokens.getAccessToken()));
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest loginRequest) {
-        return authService.login(loginRequest.getEmail(), loginRequest.getPassword());
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest loginRequest, HttpServletResponse response) {
+        AuthToken tokens = authService.login(loginRequest.getEmail(), loginRequest.getPassword());
+        Cookie refreshCookie = authService.getRefreshCookie(tokens);
+
+        response.addCookie(refreshCookie);
+        return ResponseEntity.ok(new AuthResponse(tokens.getAccessToken()));
     }
 
+
     @PostMapping("/refresh")
-    public AuthResponse refresh(@RequestParam String email,@RequestParam String refreshToken) {
-        return authService.refreshUserToken(email, refreshToken);
+    public ResponseEntity<AuthResponse> refresh(@CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
+        String email = authService.getEmailFromToken(refreshToken);
+        AuthToken newAccessToken = authService.refreshUserToken(email, refreshToken);
+        Cookie refreshCookie = authService.getRefreshCookie(newAccessToken);
+        response.addCookie(refreshCookie);
+        return ResponseEntity.ok(new AuthResponse(newAccessToken.getAccessToken()));
     }
 
     @PostMapping("/logout")
-    public String logout(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token, HttpServletResponse response) {
         String email = authService.getEmailFromToken(token.replace("Bearer ", ""));
         authService.logout(email);
-        return "Logged out successfully";
+
+        Cookie cookie = new Cookie("refreshToken", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/auth/refresh");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")

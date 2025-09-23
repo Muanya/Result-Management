@@ -1,6 +1,6 @@
 package mgt.result.sage.services;
 
-import mgt.result.sage.dto.AuthResponse;
+import mgt.result.sage.dto.AuthToken;
 import mgt.result.sage.dto.RegisterRequest;
 import mgt.result.sage.entity.User;
 import mgt.result.sage.repository.UserRepository;
@@ -48,7 +48,7 @@ class AuthServiceTest {
         user.setEmail(email);
         user.setPassword("encodedPass");
 
-        req = new RegisterRequest(firstName, lastName, email, password);
+        req = new RegisterRequest(firstName, lastName, email, password, "student");
 
     }
 
@@ -59,7 +59,7 @@ class AuthServiceTest {
         when(jwtUtil.generateAccessToken(email)).thenReturn("access123");
         when(jwtUtil.generateRefreshToken(email)).thenReturn("refresh123");
 
-        AuthResponse response = authService.register(req);
+        AuthToken response = authService.register(req);
 
         assertThat(response.getAccessToken()).isEqualTo("access123");
         assertThat(response.getRefreshToken()).isEqualTo("refresh123");
@@ -81,7 +81,7 @@ class AuthServiceTest {
         when(jwtUtil.generateAccessToken(email)).thenReturn("access123");
         when(jwtUtil.generateRefreshToken(email)).thenReturn("refresh123");
 
-        AuthResponse response = authService.login(email, password);
+        AuthToken response = authService.login(email, password);
 
         assertThat(response.getAccessToken()).isEqualTo("access123");
         assertThat(response.getRefreshToken()).isEqualTo("refresh123");
@@ -106,7 +106,7 @@ class AuthServiceTest {
         when(jwtUtil.generateAccessToken(email)).thenReturn("accessNew");
         when(jwtUtil.generateRefreshToken(email)).thenReturn("refreshNew");
 
-        AuthResponse response = authService.refreshUserToken(email, refreshToken);
+        AuthToken response = authService.refreshUserToken(email, refreshToken);
 
         assertThat(response.getAccessToken()).isEqualTo("accessNew");
         assertThat(response.getRefreshToken()).isEqualTo("refreshNew");
