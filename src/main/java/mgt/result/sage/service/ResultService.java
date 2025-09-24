@@ -1,0 +1,101 @@
+package mgt.result.sage.service;
+
+import lombok.extern.slf4j.Slf4j;
+import mgt.result.sage.dto.ResultDetail;
+import mgt.result.sage.entity.Result;
+import mgt.result.sage.repository.CourseEnrollmentRepository;
+import mgt.result.sage.repository.ResultRepository;
+import mgt.result.sage.repository.StudentRepository;
+import mgt.result.sage.utils.Util;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Slf4j
+@Service
+public class ResultService {
+
+    @Autowired
+    private ResultRepository resultRepo;
+
+    @Autowired
+    private CourseEnrollmentRepository courseEnrollmentRepo;
+
+    @Autowired
+    private StudentRepository studentRepo;
+
+    @Autowired
+    private Util util;
+
+    @Transactional
+    public ResultDetail saveResult(ResultDetail dto) {
+        var student = studentRepo.findById(dto.getStudentId())
+                .orElseThrow(() -> new IllegalArgumentException("Student not found: " + dto.getStudentId()));
+
+
+        var enrollment = courseEnrollmentRepo.findById(dto.getEnrollmentId())
+                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + dto.getEnrollmentId()));
+
+        // If a result already exists for this student+enrollment, update instead of creating duplicate
+        var result = dto.getId() != null
+                ? resultRepo.findById(dto.getId()).orElse(new Result()) // update
+                : new Result(); // new record
+
+
+//        result.setId(dto.getId());
+        result.setGrade(dto.getGrade());
+        result.setScore(dto.getScore());
+        result.setStudent(student);
+        result.setEnrollment(enrollment);
+
+        resultRepo.save(result);
+
+        return dto;
+    }
+
+    @Transactional
+    public List<ResultDetail> saveAllResults(List<ResultDetail> results) {
+        return results.stream().map(this::saveResult).toList();
+    }
+
+    public List<ResultDetail> getResultsByEnrollment(Long enrollmentId) {
+        var results = resultRepo.findByEnrollmentId(enrollmentId);
+
+        return results.stream().map(this::buildResultDetails).toList();
+    }
+
+    public List<ResultDetail> getResultsByStudent(Long studentId) {
+        var results = resultRepo.findByStudentId(studentId);
+        if (results.isEmpty()) {
+            throw new IllegalArgumentException("No results found for student " + studentId);
+        }
+
+        return results.stream().map(this::buildResultDetails).toList();
+    }
+
+    private ResultDetail buildResultDetails(Result result) {
+        return ResultDetail.builder()
+                .id(result.getId())
+                .enrollmentId(result.getEnrollment().getId())
+                .grade(result.getGrade())
+                .score(result.getScore())
+                .studentId(result.getStudent().getId())
+                .build();
+
+    }
+
+    public List<ResultDetail> filterResultByStudent(List<Long> studentIds, List<ResultDetail> resultDetails) {
+        List<ResultDetail> resultDetailList = new ArrayList<>();
+
+        for (ResultDetail res : resultDetails) {
+            if (studentIds.contains(res.getStudentId())) {
+                resultDetailList.add(res);
+            }
+        }
+
+        return resultDetailList;
+    }
+}
