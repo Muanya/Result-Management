@@ -2,6 +2,7 @@ package mgt.result.sage.controller;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import mgt.result.sage.dto.AuthRequest;
 import mgt.result.sage.dto.AuthResponse;
 import mgt.result.sage.dto.AuthToken;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/auth")
 public class AuthController {

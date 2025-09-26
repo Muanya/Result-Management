@@ -2,6 +2,8 @@ package mgt.result.sage.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import mgt.result.sage.filter.JwtAuthFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +13,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 
 @Getter
@@ -25,6 +33,10 @@ public class SecurityConfig {
     @Value("${jwt.expiration.duration}")
     private String secretExpiration;
 
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
+
     @Bean
     PasswordEncoder getPasswordEncoder() {
         log.info("Password Encoder Beam: BCryptPasswordEncoder");
@@ -33,13 +45,29 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        var noAuthPaths = new String[]{"/api/**", "/v1/auth/**"};
-        http.csrf(AbstractHttpConfigurer::disable) // disable CSRF for APIs
+        var noAuthPaths = new String[]{"/v1/auth/**"};
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable) // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth.requestMatchers(noAuthPaths).permitAll()   // no auth required
                         .anyRequest().authenticated()
-                );
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
 
         return http.build();
+    }
+
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

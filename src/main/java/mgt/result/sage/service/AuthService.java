@@ -111,7 +111,7 @@ public class AuthService {
     public Cookie getRefreshCookie(AuthToken tokens) {
         Cookie refreshCookie = new Cookie("refreshToken", tokens.getRefreshToken());
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true); // only over HTTPS in production
+        refreshCookie.setSecure(true);
         refreshCookie.setPath("v1/auth/refresh"); // cookie only sent to v1/auth/refresh
         refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
         refreshCookie.setAttribute("SameSite", "None");
