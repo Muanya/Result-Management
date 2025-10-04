@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mgt.result.sage.dto.Role;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -39,8 +40,4 @@ public class User {
 
     // getters and setters
 
-    public enum Role {
-        TEACHER,
-        STUDENT
-    }
 }

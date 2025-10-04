@@ -1,29 +1,30 @@
 package mgt.result.sage.service;
 
 import jakarta.servlet.http.Cookie;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mgt.result.sage.dto.AuthToken;
 import mgt.result.sage.dto.RegisterRequest;
+import mgt.result.sage.dto.Role;
+import mgt.result.sage.dto.UserDetail;
 import mgt.result.sage.entity.Magister;
 import mgt.result.sage.entity.Student;
 import mgt.result.sage.entity.User;
 import mgt.result.sage.repository.UserRepository;
 import mgt.result.sage.utils.JwtUtil;
+import mgt.result.sage.utils.Util;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
+@AllArgsConstructor
 @Service
 public class AuthService {
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final Util util;
 
-    public AuthService(UserRepository userRepo, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-        this.userRepo = userRepo;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
 
     public AuthToken register(RegisterRequest req) {
         if (userRepo.findByEmail(req.getEmail()).isPresent()) {
@@ -41,11 +42,11 @@ public class AuthService {
         switch (role) {
             case "teacher":
                 user = new Magister();
-                user.setRole(User.Role.TEACHER);
+                user.setRole(Role.MAGISTER);
                 break;
             case "student":
                 user = new Student();
-                user.setRole(User.Role.STUDENT);
+                user.setRole(Role.STUDENT);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid role: " + req.getRole());
@@ -103,6 +104,14 @@ public class AuthService {
         user.setRefreshToken(null);
         userRepo.save(user);
     }
+
+    public UserDetail getUserDetailFromToken(String token) {
+        String email = jwtUtil.extractEmail(token);
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return util.getUserDetailFromUser(user);
+    }
+
 
     public String getEmailFromToken(String token) {
         return jwtUtil.extractEmail(token);

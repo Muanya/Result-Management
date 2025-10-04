@@ -13,4 +13,6 @@ public class UserDetail {
     private String lastName;
 
     private String email;
+
+    private Role role;
 }

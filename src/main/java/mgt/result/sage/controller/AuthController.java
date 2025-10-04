@@ -3,10 +3,7 @@ package mgt.result.sage.controller;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import mgt.result.sage.dto.AuthRequest;
-import mgt.result.sage.dto.AuthResponse;
-import mgt.result.sage.dto.AuthToken;
-import mgt.result.sage.dto.RegisterRequest;
+import mgt.result.sage.dto.*;
 import mgt.result.sage.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -65,8 +62,9 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public String me(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<UserDetail> me(@RequestHeader("Authorization") String token) {
         token = token.replace("Bearer ", "");
-        return "You are logged in as: " + authService.getEmailFromToken(token);
+        UserDetail userDetail =  authService.getUserDetailFromToken(token);
+        return ResponseEntity.ok(userDetail);
     }
 }

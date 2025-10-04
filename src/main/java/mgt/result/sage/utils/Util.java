@@ -31,6 +31,7 @@ public class Util {
         detail.setFirstName(user.getFirstName());
         detail.setLastName(user.getLastName());
         detail.setEmail(user.getEmail());
+        detail.setRole(user.getRole());
         return detail;
     }
 
