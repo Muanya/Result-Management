@@ -27,18 +27,22 @@ public class ResultController {
         return resultService.saveAllResults(results);
     }
 
-    @GetMapping("/enrollment/{enrollmentId}")
-    public List<ResultDetail> getResultsByEnrollment(@PathVariable Long enrollmentId) {
-        return resultService.getResultsByEnrollment(enrollmentId);
+    @GetMapping("/enrollment")
+    public List<ResultDetail> getResultsByEnrollment(
+            @RequestParam(required = false) Long courseId,
+            @RequestParam(required = false) Long enrollmentId) {
+        // get results of a particular enrollment for all students
+        return resultService.getResultsByEnrollment(enrollmentId, courseId);
     }
 
     @PostMapping("/enrollment")
     public List<ResultDetail> getResultsByEnrollment(@RequestBody ResultEnrollmentRequest req) {
+        // get results of particular enrollment for the given students in request body
         if (req == null) {
             throw new RuntimeException("Missing request body");
         }
 
-        List<ResultDetail> resultDetails = resultService.getResultsByEnrollment(req.getEnrollmentId());
+        List<ResultDetail> resultDetails = resultService.getResultsByEnrollment(req.getEnrollmentId(), req.getCourseId());
         return resultService.filterResultByStudent(req.getStudentIds(), resultDetails);
     }
 

@@ -5,10 +5,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
-public interface ResultRepository  extends JpaRepository<Result, Long> {
+public interface ResultRepository extends JpaRepository<Result, Long> {
     List<Result> findByEnrollmentId(Long enrollmentId);
+
+    List<Result> findByCourseIdAndEnrollmentIsNull(Long courseId);
+
     List<Result> findByStudentId(Long studentId);
+
+    Optional<Result> findByStudentIdAndEnrollmentId(Long studentId, Long enrollmentId);
+
+    Optional<Result> findByStudentIdAndCourseIdAndEnrollmentIsNull(Long studentId, Long courseId);
+
 }

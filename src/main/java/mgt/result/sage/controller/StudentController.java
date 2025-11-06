@@ -21,9 +21,19 @@ public class StudentController {
 
 
     @GetMapping
-    public ResponseEntity<List<UserDetail>> getStudents() {
-        return ResponseEntity.ok(studentService.getAllStudents());
+    public ResponseEntity<List<UserDetail>> getStudents(
+            @RequestParam(required = false) Long courseId,
+            @RequestParam(required = false) Long enrollmentId
+    ) {
+        return ResponseEntity.ok(studentService.getAllStudents(courseId, enrollmentId));
 
     }
+
+    @GetMapping("/{studentId}")
+    public ResponseEntity<UserDetail> getStudentsById(@PathVariable Long studentId) {
+        return ResponseEntity.ok(studentService.getStudentById(studentId));
+
+    }
+
 
 }

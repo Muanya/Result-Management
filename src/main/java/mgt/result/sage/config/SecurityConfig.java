@@ -46,14 +46,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        var noAuthPaths = new String[]{"/v1/auth/register", "/v1/auth/login", "/v1/auth/refresh"};
+        var noAuthPaths = new String[]{"/v1/auth/register", "/v1/auth/login", "/v1/auth/refresh", "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html"};
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable) // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth.requestMatchers(noAuthPaths).permitAll()   // no auth required
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
 
         return http.build();
     }

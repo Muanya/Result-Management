@@ -11,4 +11,5 @@ public class ResultDetail {
     private String grade;
     private Long studentId;
     private Long enrollmentId;
+    private Long courseId;
 }

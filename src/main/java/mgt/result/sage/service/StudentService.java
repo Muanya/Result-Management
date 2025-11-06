@@ -21,9 +21,31 @@ public class StudentService {
         return studentRepo.save(s);
     }
 
-    public List<UserDetail> getAllStudents() {
-        List<Student> students = studentRepo.findAll();
+    public List<UserDetail> getAllStudents(Long courseId, Long enrollmentId) {
+        List<Student> students;
+        if (courseId == null && enrollmentId == null) {
+            students = studentRepo.findAll();
+        } else {
+            students = getStudentsByCourseAndEnrollment(courseId, enrollmentId);
+        }
         return util.getUserDetails(students);
+
+    }
+
+
+    public UserDetail getStudentById(Long id) {
+        Student student = studentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + id));
+        return util.getUserDetailFromUser(student);
+    }
+
+
+    public List<Student> getStudentsByCourseAndEnrollment(Long courseId, Long enrollmentId) {
+        if (enrollmentId != null) {
+            return studentRepo.findStudentsByEnrollmentId(enrollmentId);
+        } else {
+            return studentRepo.findStudentsWithoutEnrollmentInCourse(courseId);
+        }
     }
 
 

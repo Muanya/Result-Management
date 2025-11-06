@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -52,7 +53,7 @@ public class CourseService {
         var magisters = magisterRepo.findAllById(req.getMagisterIds());
 
         var enrollment = CourseEnrollment.builder()
-                .className(req.getEnrollmentClassName())
+                .className(req.getEnrollmentName())
                 .course(course)
                 .students(students)
                 .magisters(magisters)
@@ -60,6 +61,19 @@ public class CourseService {
                 .build();
 
         CourseEnrollment courseEnrollment = enrollmentRepo.save(enrollment);
+
+        // save students under corresponding course
+        if (course.getStudents() == null) {
+            course.setStudents(new ArrayList<>());
+        }
+
+        for (var student : students) {
+            if (!course.getStudents().contains(student)) {
+                course.getStudents().add(student);
+            }
+        }
+
+        courseRepo.save(course);
 
         return courseEnrollment.getClassName();
     }
@@ -79,7 +93,7 @@ public class CourseService {
 
     public List<EnrollmentDetail> getCourseEnrollmentByCourseId(Long courseId) {
         List<CourseEnrollment> enrollment = enrollmentRepo.findByCourseId(courseId);
-        return  enrollment.stream().map(this::getEnrollmentDetail).toList();
+        return enrollment.stream().map(this::getEnrollmentDetail).toList();
 
     }
 
@@ -91,7 +105,7 @@ public class CourseService {
 
         return EnrollmentDetail.builder()
                 .id(enrollment.getId())
-                .enrollmentClassName(enrollment.getClassName())
+                .enrollmentName(enrollment.getClassName())
                 .course(courseData)
                 .magisters(magisters)
                 .students(students)

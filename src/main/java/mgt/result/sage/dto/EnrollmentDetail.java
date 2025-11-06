@@ -12,7 +12,7 @@ import java.util.List;
 public class EnrollmentDetail {
 
     private  Long id;
-    private String enrollmentClassName;
+    private String enrollmentName;
     private List<UserDetail> students;
     private List<UserDetail> magisters;
     private CourseData course;

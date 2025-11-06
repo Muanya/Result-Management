@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public class ClassEnrollRequest {
 
-    private String enrollmentClassName;
+    private String enrollmentName;
 
     private Long courseId;
 

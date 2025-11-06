@@ -18,6 +18,9 @@ public class Student extends User {
     private Integer enrollmentYear;
 
     @ManyToMany(mappedBy = "students")
+    private List<Course> courses;
+
+    @ManyToMany(mappedBy = "students")
     private List<CourseEnrollment> enrollments;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
