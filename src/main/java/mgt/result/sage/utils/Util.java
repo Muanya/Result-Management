@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class Util {
@@ -35,13 +36,20 @@ public class Util {
         return detail;
     }
 
-    public CourseData getCourseData(Course course){
+    public CourseData getCourseData(Course course) {
         return CourseData.builder()
                 .id(course.getId())
                 .code(course.getCode())
                 .title(course.getTitle())
                 .creditUnit(course.getCreditUnit())
                 .build();
+    }
+
+    public String getStudentFullName(User student) {
+        if (student == null) return "";
+        String firstName = Optional.ofNullable(student.getFirstName()).orElse("");
+        String lastName = Optional.ofNullable(student.getLastName()).orElse("");
+        return (firstName + " " + lastName).trim();
     }
 
 

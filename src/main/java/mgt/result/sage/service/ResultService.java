@@ -116,13 +116,27 @@ public class ResultService {
     }
 
     private ResultDetail buildResultDetails(Result result) {
-        return ResultDetail.builder()
+        if (result == null || result.getStudent() == null) {
+            throw new IllegalArgumentException("Result cannot be null");
+        }
+
+        String studentName = util.getStudentFullName(result.getStudent());
+        ResultDetail.ResultDetailBuilder builder =  ResultDetail.builder()
                 .id(result.getId())
                 .enrollmentId(result.getEnrollment().getId())
                 .grade(result.getGrade())
                 .score(result.getScore())
                 .studentId(result.getStudent().getId())
-                .build();
+                .studentName(studentName);
+
+
+        if(result.getEnrollment() != null){
+            builder.courseId(result.getEnrollment().getCourse().getId());
+        }else {
+            builder.courseId(result.getCourse().getId());
+        }
+
+        return builder.build();
 
     }
 
@@ -142,4 +156,8 @@ public class ResultService {
         return resultDetailList;
     }
 
+    public List<ResultDetail> getResultForAllStudents() {
+        var results = resultRepo.findAll();
+        return results.stream().map(this::buildResultDetails).toList();
+    }
 }

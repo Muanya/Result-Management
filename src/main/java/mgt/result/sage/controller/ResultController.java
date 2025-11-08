@@ -22,6 +22,13 @@ public class ResultController {
         return resultService.saveResult(result);
     }
 
+
+    @GetMapping
+    public List<ResultDetail> getAllResults() {
+        return resultService.getResultForAllStudents();
+    }
+
+
     @PostMapping("/bulk")
     public List<ResultDetail> saveAllResults(@RequestBody List<ResultDetail> results) {
         return resultService.saveAllResults(results);
@@ -45,6 +52,8 @@ public class ResultController {
         List<ResultDetail> resultDetails = resultService.getResultsByEnrollment(req.getEnrollmentId(), req.getCourseId());
         return resultService.filterResultByStudent(req.getStudentIds(), resultDetails);
     }
+
+
 
     @GetMapping("/student/{studentId}")
     public List<ResultDetail> getResultsByStudent(@PathVariable Long studentId) {

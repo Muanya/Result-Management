@@ -12,4 +12,5 @@ public class ResultDetail {
     private Long studentId;
     private Long enrollmentId;
     private Long courseId;
+    private String studentName;
 }
